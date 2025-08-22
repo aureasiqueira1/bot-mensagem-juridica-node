@@ -197,7 +197,7 @@ npm run send-test    # Testar envio manual
 ### Estrutura do Projeto
 
 ```
-src/
+api/
 ├── content-generator/    # Geração de conteúdo IA
 ├── scheduler/           # Agendamento e execução
 ├── senders/            # Envio para Teams

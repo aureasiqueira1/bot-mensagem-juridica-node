@@ -4,11 +4,11 @@
   "type": "module",
   "description": "Bot criativo para envio automático de conteúdo divertido e engajante para Microsoft Teams em dias úteis",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch api/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "vercel-build": "npm run build",
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint api/**/*.ts",
     "test": "jest",
     "send-test": "curl -X POST http://localhost:3000/send-message",
     "test:watch": "jest --watch",

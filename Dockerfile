@@ -14,7 +14,7 @@ COPY tsconfig.json ./
 RUN npm ci
 
 # Copiar código fonte
-COPY src/ ./src/
+COPY api/ ./api/
 
 # Build da aplicação
 RUN npm run build

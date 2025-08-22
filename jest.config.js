@@ -8,10 +8,10 @@ module.exports = {
 
   // Cobertura de código
   collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/index.ts', // Arquivo de entrada
-    '!src/types/**', // Definições de tipos
+    'api/**/*.ts',
+    '!api/**/*.d.ts',
+    '!api/index.ts', // Arquivo de entrada
+    '!api/types/**', // Definições de tipos
   ],
 
   coverageDirectory: 'coverage',
@@ -26,7 +26,7 @@ module.exports = {
   },
 
   // Setup
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/api/__tests__/setup.ts'],
 
   // Transformações
   transform: {
@@ -35,12 +35,12 @@ module.exports = {
 
   // Módulos
   moduleNameMapping: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/api/$1',
   },
 
   // Timeout para testes assíncronos
   testTimeout: 10000,
 
   // Variáveis de ambiente para testes
-  setupFiles: ['<rootDir>/src/__tests__/env-setup.ts'],
+  setupFiles: ['<rootDir>/api/__tests__/env-setup.ts'],
 };
