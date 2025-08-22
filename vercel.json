@@ -1,19 +1,13 @@
 {
   "version": 2,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/index.ts"
-    }
-  ],
   "functions": {
-    "api/index.ts": {
+    "api/index.js": {
       "maxDuration": 30
     }
   },
   "crons": [
     {
-      "path": "/send-message",
+      "path": "/api/send-message",
       "schedule": "55 20 * * 1-5"
     }
   ]
