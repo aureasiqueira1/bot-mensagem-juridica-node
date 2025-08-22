@@ -1,9 +1,29 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
   "crons": [
     {
       "path": "/api/send-scheduled-message",
-      "schedule": "22 20 * * 1-5"
+      "schedule": "56 17 * * 1-5"
     }
   ]
 }
