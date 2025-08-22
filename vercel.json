@@ -2,28 +2,25 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/**/*.js",
+      "src": "src/index.ts",
       "use": "@vercel/node"
-    },
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "src/index.ts"
     }
   ],
+  "functions": {
+    "src/index.ts": {
+      "maxDuration": 30
+    }
+  },
   "crons": [
     {
-      "path": "/api/send-scheduled-message",
-      "schedule": "56 17 * * 1-5"
+      "path": "/send-message",
+      "schedule": "30 9 * * 1-5"
     }
   ]
 }

@@ -4,15 +4,15 @@
   "type": "module",
   "description": "Bot criativo para envio automático de conteúdo divertido e engajante para Microsoft Teams em dias úteis",
   "scripts": {
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "vercel-build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "lint": "eslint src/**/*.ts --fix",
+    "vercel-build": "npm run build",
+    "lint": "eslint src/**/*.ts",
     "test": "jest",
+    "send-test": "curl -X POST http://localhost:3000/send-message",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "send-test": "curl -X POST http://localhost:3000/send-message",
     "check-health": "curl http://localhost:3000/health",
     "docker:build": "docker build -t creative-teams-bot .",
     "docker:run": "docker run -p 3000:3000 --env-file .env creative-teams-bot"
@@ -37,7 +37,8 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "node-cron": "^3.0.3",
-    "openai": "^4.20.1"
+    "openai": "^4.20.1",
+    "tsx": "^4.20.4"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
