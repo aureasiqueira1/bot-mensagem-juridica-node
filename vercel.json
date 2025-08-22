@@ -9,7 +9,7 @@
   "crons": [
     {
       "path": "/api/send-scheduled-message",
-      "schedule": "56 17 * * 1-5"
+      "schedule": "30 19 * * 1-5"
     }
   ]
 }
