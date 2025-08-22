@@ -8,6 +8,14 @@
   ],
   "routes": [
     {
+      "src": "/api/cron-trigger",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/api/send-message",
+      "dest": "/api/index.js"
+    },
+    {
       "src": "/send-message",
       "dest": "/api/index.js"
     },
@@ -18,8 +26,8 @@
   ],
   "crons": [
     {
-      "path": "/send-message",
-      "schedule": "30 21 * * 1-5"
+      "path": "/api/cron-trigger",
+      "schedule": "30 21 * * *"
     }
   ]
 }

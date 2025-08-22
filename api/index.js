@@ -21,8 +21,14 @@ module.exports = async function handler(req, res) {
 
   const { url, method } = req;
   
+  // Debug logging para identificar problemas com cron
+  console.log(`[DEBUG] Recebida requisição: ${method} ${url}`);
+  
   // Parse the URL to get the pathname (remove query parameters and handle /api prefix)
   const pathname = new URL(url, 'http://localhost').pathname.replace(/^\/api/, '') || '/';
+  
+  // Debug logging para path processado
+  console.log(`[DEBUG] Pathname processado: ${pathname}`);
 
   try {
     // Route handling
@@ -48,6 +54,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    // Endpoint principal que lida com os dois tipos de chamada
     if (pathname === '/send-message' && (method === 'POST' || method === 'GET')) {
       logger.info(`📤 Solicitação de envio recebida via ${method}${method === 'GET' ? ' (possivelmente de cron job)' : ''}`);
       await BotScheduler.executeManually();
@@ -56,6 +63,27 @@ module.exports = async function handler(req, res) {
         message: 'Mensagem criativa enviada com sucesso!',
         timestamp: new Date().toISOString(),
       });
+    }
+    
+    // Endpoint específico para o cron job da Vercel (para garantir compatibilidade)
+    if ((pathname === '/api/send-message' || pathname === '/api/cron-trigger') && method === 'GET') {
+      logger.info('📤 Cron job da Vercel recebido');
+      console.log('[VERCEL CRON] Cron job recebido em ' + new Date().toISOString());
+      try {
+        await BotScheduler.executeManually();
+        console.log('[VERCEL CRON] Execução bem-sucedida');
+        return res.json({
+          success: true, 
+          message: 'Mensagem disparada via cron job da Vercel',
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('[VERCEL CRON] Erro:', error);
+        return res.status(500).json({
+          error: 'Erro ao processar cron job',
+          details: error.message
+        });
+      }
     }
 
     if (pathname === '/test-connection' && method === 'POST') {
