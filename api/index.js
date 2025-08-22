@@ -48,8 +48,8 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (pathname === '/send-message' && method === 'POST') {
-      logger.info('📤 Solicitação de envio manual recebida');
+    if (pathname === '/send-message' && (method === 'POST' || method === 'GET')) {
+      logger.info(`📤 Solicitação de envio recebida via ${method}${method === 'GET' ? ' (possivelmente de cron job)' : ''}`);
       await BotScheduler.executeManually();
       return res.json({
         success: true,
