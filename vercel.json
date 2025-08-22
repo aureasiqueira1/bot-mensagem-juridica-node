@@ -34,7 +34,7 @@
   "crons": [
     {
       "path": "/api/cron-trigger",
-      "schedule": "05 22 * * *"
+      "schedule": "${BOT_SEND_TIME=05 22 * * *}"
     }
   ]
 }

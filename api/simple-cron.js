@@ -4,6 +4,7 @@
 
 const axios = require('axios');
 const dotenv = require('dotenv');
+const { AIContentGenerator } = require('./content-generator/AIContentGenerator');
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -25,12 +26,36 @@ module.exports = async (req, res) => {
       throw new Error('URL do webhook do Teams não configurada');
     }
     
+    logWithTime('HANDLER SIMPLES - Gerando mensagem criativa via AIContentGenerator');
+    
+    // Criar instância do gerador de conteúdo
+    const contentGenerator = new AIContentGenerator();
+    
+    // Gerar mensagem criativa
+    let message;
+    try {
+      // Tentar gerar mensagem criativa
+      message = await contentGenerator.generateCreativeMessage();
+      logWithTime(`HANDLER SIMPLES - Mensagem criativa gerada com sucesso: ${message.content}`);
+    } catch (generatorError) {
+      // Em caso de erro, usar mensagem de fallback
+      logWithTime(`HANDLER SIMPLES - Erro ao gerar mensagem criativa: ${generatorError.message}`);
+      const fallbackMessages = contentGenerator.getFallbackMessages();
+      const randomIndex = Math.floor(Math.random() * fallbackMessages.length);
+      message = {
+        content: fallbackMessages[randomIndex],
+        style: 'HUMOR',
+        topic: 'TECH_HUMOR'
+      };
+      logWithTime(`HANDLER SIMPLES - Usando mensagem de fallback: ${message.content}`);
+    }
+    
     logWithTime('HANDLER SIMPLES - Enviando mensagem para o Teams');
     
-    // Enviar uma mensagem diretamente ao Teams com axios
+    // Enviar a mensagem criativa ao Teams
     const response = await axios.post(teamsUrl, {
-      title: 'Mensagem Automática do Bot',
-      text: `Esta é uma mensagem de teste enviada pelo cron job da Vercel às ${new Date().toLocaleString()}`
+      title: 'Mensagem Criativa do Bot',
+      text: message.content
     });
     
     logWithTime(`HANDLER SIMPLES - Mensagem enviada com sucesso, status: ${response.status}`);
@@ -38,7 +63,7 @@ module.exports = async (req, res) => {
     // Retornar resposta de sucesso
     return res.status(200).json({
       success: true,
-      message: 'Mensagem enviada diretamente para o Teams',
+      message: 'Mensagem criativa enviada com sucesso para o Teams',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
