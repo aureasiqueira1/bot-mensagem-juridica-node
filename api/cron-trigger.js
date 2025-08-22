@@ -13,18 +13,31 @@ module.exports = async (req, res) => {
   // Logs para debug
   console.log('[CRON JOB SIMPLES] Iniciado em: ' + new Date().toISOString());
   
+  // Verificar se a requisição veio do cron job da Vercel
+  const userAgent = req.headers['user-agent'] || '';
+  const isVercelCron = userAgent.includes('vercel-cron');
+  
+  console.log(`[CRON JOB SIMPLES] Requisição: User-Agent = ${userAgent}`);
+  console.log(`[CRON JOB SIMPLES] Identificado como cron job Vercel: ${isVercelCron}`);
+  
   try {
     // Inicialização do scheduler se necessário
     await BotScheduler.initialize();
     
-    // Execução do bot com timeout longo
+    // Execução do bot com timeout mais curto para Vercel
     console.log('[CRON JOB SIMPLES] Executando bot...');
+    console.log('[CRON JOB SIMPLES] Método HTTP:', req.method);
+    console.log('[CRON JOB SIMPLES] Headers:', JSON.stringify(req.headers, null, 2));
     
     // Executar com tempo suficiente
+    // Usar timeout diferente dependendo da origem
+    const timeoutDuration = isVercelCron ? 15000 : 25000;
+    console.log(`[CRON JOB SIMPLES] Usando timeout de ${timeoutDuration}ms`);
+    
     const result = await new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        reject(new Error('Timeout na execução do bot após 25 segundos'));
-      }, 25000);
+        reject(new Error(`Timeout na execução do bot após ${timeoutDuration/1000} segundos`));
+      }, timeoutDuration);
       
       BotScheduler.executeManually()
         .then(result => {
