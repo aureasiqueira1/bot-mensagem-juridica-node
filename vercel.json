@@ -34,7 +34,7 @@
   "crons": [
     {
       "path": "/api/cron-trigger",
-      "schedule": "28 22 * * *"
+      "schedule": "36 22 * * *"
     }
   ]
 }
