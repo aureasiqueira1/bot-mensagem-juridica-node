@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
     }
     
     // Endpoint específico para o cron job da Vercel (para garantir compatibilidade)
-    if ((pathname === '/api/send-message' || pathname === '/api/cron-trigger') && method === 'GET') {
+    if ((pathname === '/send-message' || pathname === '/cron-trigger') && method === 'GET') {
       logger.info('📤 Cron job da Vercel recebido');
       console.log('[VERCEL CRON] Cron job recebido em ' + new Date().toISOString());
       try {
@@ -145,7 +145,9 @@ module.exports = async function handler(req, res) {
       availableRoutes: [
         'GET /health',
         'GET /status',
+        'GET /send-message',
         'POST /send-message',
+        'GET /cron-trigger',
         'POST /test-connection',
         'GET /analytics',
         'GET /messages/recent',
