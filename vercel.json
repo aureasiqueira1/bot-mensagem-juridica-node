@@ -15,7 +15,7 @@
   "crons": [
     {
       "path": "/api/send-message",
-      "schedule": "55 20 * * 1-5"
+      "schedule": "06 21 * * 1-5"
     }
   ]
 }
