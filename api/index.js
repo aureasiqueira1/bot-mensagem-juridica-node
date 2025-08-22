@@ -20,10 +20,13 @@ module.exports = async function handler(req, res) {
   }
 
   const { url, method } = req;
+  
+  // Parse the URL to get the pathname (remove query parameters and handle /api prefix)
+  const pathname = new URL(url, 'http://localhost').pathname.replace(/^\/api/, '') || '/';
 
   try {
     // Route handling
-    if (url === '/health' && method === 'GET') {
+    if (pathname === '/health' && method === 'GET') {
       return res.json({
         status: 'OK',
         service: 'Creative Teams Bot',
@@ -33,7 +36,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (url === '/status' && method === 'GET') {
+    if (pathname === '/status' && method === 'GET') {
       const stats = await BotScheduler.getInstance().getSystemStats();
       return res.json({
         status: 'running',
@@ -45,7 +48,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (url === '/send-message' && method === 'POST') {
+    if (pathname === '/send-message' && method === 'POST') {
       logger.info('📤 Solicitação de envio manual recebida');
       await BotScheduler.executeManually();
       return res.json({
@@ -55,7 +58,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (url === '/test-connection' && method === 'POST') {
+    if (pathname === '/test-connection' && method === 'POST') {
       return res.json({
         success: true,
         message: 'Teste de conexão realizado',
@@ -63,7 +66,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (url === '/analytics' && method === 'GET') {
+    if (pathname === '/analytics' && method === 'GET') {
       const stats = await storage.getMessageStats();
       const insights = await storage.getContentInsights();
       return res.json({
@@ -73,8 +76,8 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (url.startsWith('/messages/recent') && method === 'GET') {
-      const urlParams = new URLSearchParams(url.split('?')[1]);
+    if (pathname.startsWith('/messages/recent') && method === 'GET') {
+      const urlParams = new URLSearchParams(req.url.split('?')[1]);
       const limit = parseInt(urlParams.get('limit')) || 10;
       const messages = await storage.getRecentMessages(Math.min(limit, 50));
 
@@ -91,8 +94,8 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    if (url.match(/\/messages\/(.+)\/effectiveness/) && method === 'PATCH') {
-      const id = url.match(/\/messages\/(.+)\/effectiveness/)[1];
+    if (pathname.match(/\/messages\/(.+)\/effectiveness/) && method === 'PATCH') {
+      const id = pathname.match(/\/messages\/(.+)\/effectiveness/)[1];
       const { effectiveness } = req.body;
 
       if (!['low', 'medium', 'high'].includes(effectiveness)) {
