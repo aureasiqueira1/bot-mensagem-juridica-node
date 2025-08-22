@@ -12,6 +12,10 @@
       "dest": "/api/cron-trigger.js"
     },
     {
+      "src": "/api/test-cron",
+      "dest": "/api/test-cron.js"
+    },
+    {
       "src": "/api/send-message",
       "dest": "/api/index.ts"
     },
