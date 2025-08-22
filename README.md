@@ -1,563 +1,320 @@
-# 🤖 AI Content Bot - Jurídico & Tech
+# 🤖 Bot Criativo para Microsoft Teams
 
-API Node.js com TypeScript que gera e envia automaticamente conteúdo criativo mesclando temas jurídicos com tecnologia para o Microsoft Teams.
+> Bot automatizado que envia mensagens criativas e bem-humoradas para Microsoft Teams em dias úteis, mantendo a equipe engajada e motivada.
 
-## 🚀 Características
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green.svg)](https://supabase.com/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-orange.svg)](https://openai.com/)
 
-- **Geração Inteligente**: Utiliza OpenAI para criar conteúdo único e criativo
-- **Anti-Duplicação**: Sistema robusto para evitar repetição de mensagens
-- **Agendamento Automático**: Envio diário no horário configurado
-- **Armazenamento Persistente**: Histórico completo no Supabase
-- **Integração Teams**: Envio direto via Power Automate
-- **Clean Architecture**: Código modular e bem organizado
+## 🎯 **Funcionalidades**
 
-## 📁 Estrutura do Projeto
+- ⏰ **Agendamento Inteligente**: Envia mensagens apenas em dias úteis (segunda a sexta)
+- 🎨 **Conteúdo Criativo**: IA gera mensagens únicas e envolventes sobre tecnologia
+- 😄 **4 Estilos**: Humor, curiosidades, dicas práticas e reflexões
+- 🚫 **Anti-Repetição**: Sistema avançado para evitar conteúdo duplicado
+- 📊 **Analytics**: Estatísticas de engajamento e diversidade de conteúdo
+- 🔄 **Failsafe**: Mensagens de fallback em caso de erro
+- 🎭 **Contextual**: Adapta tom e tema baseado no dia da semana
 
-```
-src/
-├── content-generator/          # Geração de conteúdo via IA
-│   └── AIContentGenerator.ts
-├── scheduler/                  # Agendamento e orquestração
-│   └── BotScheduler.ts
-├── senders/                   # Integrações com canais
-│   └── TeamsSender.ts
-├── storage/                   # Comunicação com banco
-│   └── SupabaseStorage.ts
-├── types/                     # Definições TypeScript
-│   └── index.ts
-├── utils/                     # Utilitários
-│   └── Logger.ts
-└── index.ts                   # Ponto de entrada
-```
+## 📋 **Pré-requisitos**
 
-## 🛠 Pré-requisitos
+- Node.js 18+
+- NPM ou Yarn
+- Conta OpenAI com API Key
+- Conta Supabase (PostgreSQL)
+- Microsoft Teams com Power Automate configurado
 
-1. **Node.js** 18+
-2. **Conta Supabase** (gratuita)
-3. **Microsoft Teams** com Power Automate
-4. **OpenAI API Key** para geração de conteúdo
+## 🚀 **Instalação e Configuração**
 
-## ⚡ Instalação Rápida
-
-### 1. Clone e instale dependências
+### 1. Clone o Repositório
 
 ```bash
-git clone <repositorio>
-cd ai-content-bot
+git clone <seu-repositorio>
+cd creative-teams-bot
 npm install
 ```
 
-### 2. Configure o ambiente
+### 2. Configure as Variáveis de Ambiente
 
 ```bash
 cp .env.example .env
-# Edite o .env com suas credenciais
 ```
 
-### 3. Configure o Supabase
-
-Execute o SQL do arquivo `database-schema.sql` no painel do Supabase:
-
-```sql
--- Criar tabela de mensagens
-CREATE TABLE IF NOT EXISTS public.messages (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    content TEXT NOT NULL,
-    style VARCHAR(20) NOT NULL,
-    topic VARCHAR(30) NOT NULL,
-    hash VARCHAR(64) NOT NULL UNIQUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    sent_at TIMESTAMP WITH TIME ZONE
-);
-```
-
-### 4. Execute o projeto
+Edite o arquivo `.env`:
 
 ```bash
-# Desenvolvimento
+# Configurações Básicas
+BOT_SEND_TIME=09:30
+NODE_ENV=development
+WORKDAYS_ONLY=true
+
+# OpenAI (Obrigatório)
+OPENAI_API_KEY=sk-proj-sua-chave-aqui
+
+# Supabase (Obrigatório)
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-publica-aqui
+
+# Microsoft Teams (Obrigatório)
+POWER_AUTOMATE_URL=https://prod-xx.westus.logic.azure.com/workflows/...
+
+# Opcionais
+CREATIVITY_LEVEL=creative
+MAX_MESSAGE_LENGTH=200
+```
+
+### 3. Configure o Banco de Dados
+
+Execute o SQL no painel do Supabase:
+
+```sql
+-- Copie e execute o conteúdo de database-schema.sql
+```
+
+### 4. Configure o Power Automate
+
+1. No Teams, vá em **Apps** → **Power Automate**
+2. Crie um novo flow:
+   - **Trigger**: "When a HTTP request is received"
+   - **Action**: "Post message in a chat or channel"
+3. Copie a URL do webhook para `POWER_AUTOMATE_URL`
+
+## 🏃‍♂️ **Como Usar**
+
+### Desenvolvimento Local
+
+```bash
+# Iniciar em modo desenvolvimento
 npm run dev
 
-# Produção
+# Testar envio manual
+curl -X POST http://localhost:3000/send-message
+
+# Verificar status
+curl http://localhost:3000/status
+```
+
+### Produção
+
+```bash
+# Build do projeto
 npm run build
+
+# Iniciar em produção
 npm start
 ```
 
-## 🔧 Configuração
+## 📊 **API Endpoints**
 
-### Variáveis de Ambiente (.env)
+### Principais
 
-| Variável                        | Descrição                 | Exemplo                     |
-| ------------------------------- | ------------------------- | --------------------------- |
-| `BOT_SEND_TIME`                 | Horário de envio (HH:MM)  | `09:00`                     |
-| `NEXT_PUBLIC_SUPABASE_URL`      | URL do projeto Supabase   | `https://xyz.supabase.co`   |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase | `eyJ...`                    |
-| `POWER_AUTOMATE_URL`            | Webhook do Power Automate | `https://prod-97.westus...` |
-| `OPENAI_API_KEY`                | Chave da API OpenAI       | `sk-...`                    |
+- `GET /health` - Status do sistema
+- `GET /status` - Informações detalhadas do bot
+- `POST /send-message` - Envio manual de mensagem
+- `GET /analytics` - Estatísticas detalhadas
 
-### Configuração do Microsoft Teams
+### Analytics
 
-1. **Crie um Flow no Power Automate**:
+- `GET /messages/recent` - Mensagens recentes
+- `PATCH /messages/:id/effectiveness` - Atualizar efetividade
 
-   - Trigger: "When a HTTP request is received"
-   - Action: "Post message in a chat or channel"
-
-2. **Configure o webhook**:
-   - Copie a URL gerada e cole em `POWER_AUTOMATE_URL`
-
-## 🎯 Funcionalidades
+## 🎨 **Tipos de Conteúdo**
 
 ### Estilos de Mensagem
 
-- **Humor**: Piadas leves sobre direito e tecnologia
-- **Curiosidade**: Fatos interessantes sobre legal tech
-- **Dicas**: Conselhos práticos de compliance e desenvolvimento
-- **Reflexão**: Provocações sobre futuro do direito digital
+- **Humor** 😄 - Piadas inteligentes sobre tecnologia
+- **Curiosidades** 🤓 - Fatos interessantes sobre tech
+- **Dicas** 💡 - Conselhos práticos com humor
+- **Reflexões** 🤔 - Provocações sobre futuro da tecnologia
 
 ### Tópicos Abordados
 
-- **Legal Tech**: Inovações jurídicas
-- **Development**: Desenvolvimento com aspectos legais
-- **Project Management**: Gestão de projetos + compliance
-- **Agile**: Metodologias ágeis + processos legais
-- **Mixed**: Combinação livre dos temas
+- **Tech Humor** - Humor sobre programação e tecnologia
+- **Dev Life** - Situações da vida de desenvolvedor
+- **Code Wisdom** - Sabedoria sobre programação
+- **Tech Facts** - Curiosidades fascinantes
+- **Legal Tech** - Direito digital e compliance (opcional)
 
-## 📊 Endpoints da API
+## 📅 **Agendamento**
 
-### GET `/health`
+O bot funciona automaticamente:
 
-Verifica se o serviço está funcionando
+- **Segunda**: Mensagens motivacionais para começar a semana
+- **Terça/Quarta**: Conteúdo técnico e educativo
+- **Quinta**: Reflexões e inspiração para reta final
+- **Sexta**: Humor para celebrar o fim de semana
 
-```json
-{
-  "status": "OK",
-  "timestamp": "2025-01-15T12:00:00.000Z",
-  "service": "AI Content Bot"
-}
-```
+**Horário padrão**: 09:30 (configurável via `BOT_SEND_TIME`)
 
-### GET `/status`
+## 🚀 **Deploy**
 
-Status detalhado do sistema
-
-```json
-{
-  "status": "running",
-  "scheduler": "active",
-  "nextExecution": "quinta-feira, 16 de janeiro de 2025 às 09:00"
-}
-```
-
-### POST `/send-message`
-
-Envia mensagem manualmente (para testes)
-
-```json
-{
-  "success": true,
-  "message": "Mensagem enviada com sucesso!"
-}
-```
-
-## 🧪 Testes
-
-### Teste Manual
+### Vercel (Recomendado)
 
 ```bash
-# Envia mensagem de teste
-curl -X POST http://localhost:3000/send-message
-```
+# Instalar CLI
+npm install -g vercel
 
-### Teste de Conexão Teams
+# Deploy
+vercel
 
-O sistema testa automaticamente a conexão com Teams na inicialização.
-
-## 📝 Logs
-
-O sistema gera logs detalhados:
-
-```
-[2025-01-15T09:00:00.000Z] [INFO] 🤖 Iniciando execução do bot...
-[2025-01-15T09:00:01.250Z] [SUCCESS] Conteúdo gerado com sucesso
-[2025-01-15T09:00:02.100Z] [SUCCESS] Mensagem salva no Supabase
-[2025-01-15T09:00:03.850Z] [SUCCESS] Mensagem enviada para Teams com sucesso!
-[2025-01-15T09:00:03.900Z] [SUCCESS] ✅ Bot executado com sucesso em 3900ms
-```
-
-## 🔄 Como Funciona
-
-1. **Agendamento**: Cron job executa diariamente no horário configurado
-2. **Geração**: IA cria conteúdo baseado em estilo/tópico aleatórios
-3. **Verificação**: Sistema verifica se conteúdo não é duplicata
-4. **Armazenamento**: Salva mensagem no Supabase com hash único
-5. **Envio**: Envia para Teams via Power Automate
-6. **Confirmação**: Marca mensagem como enviada no banco
-
-## 🛡 Prevenção de Duplicatas
-
-- **Hash SHA-256** do conteúdo normalizado
-- **Histórico persistente** no Supabase
-- **Contexto de mensagens anteriores** para a IA
-- **Retry automático** se conteúdo duplicado for gerado
-
-## 🚨 Tratamento de Erros
-
-- **Retry automático** em falhas temporárias
-- **Logs detalhados** para debugging
-- **Fallback** em caso de falha na IA
-- **Monitoramento** de conectividade
-
-## 📈 Monitoramento
-
-### Estatísticas Disponíveis
-
-- Total de mensagens geradas
-- Mensagens enviadas vs. pendentes
-- Distribuição por estilo e tópico
-- Primeira e última mensagem
-- Tempo de atividade do sistema
-
-### Query SQL para Estatísticas
-
-```sql
-SELECT * FROM public.message_stats;
-```
-
-## 🔧 Manutenção
-
-### Limpeza de Mensagens Antigas
-
-```sql
-SELECT public.cleanup_old_messages();
-```
-
-### Backup do Banco
-
-```bash
-# Via Supabase CLI
-supabase db dump --local > backup.sql
-```
-
-## 🚀 Deploy em Produção
-
-### Heroku
-
-```bash
-# Instalar Heroku CLI
-heroku create ai-content-bot
-heroku config:set BOT_SEND_TIME=09:00
-heroku config:set OPENAI_API_KEY=sk-...
-# ... outras variáveis
-git push heroku main
+# Configurar environment variables na dashboard
 ```
 
 ### Docker
 
-```dockerfile
-# Dockerfile
-FROM node:18-alpine
+```bash
+# Build da imagem
+docker build -t creative-teams-bot .
 
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-RUN npm run build
-
-EXPOSE 3000
-
-CMD ["npm", "start"]
+# Executar container
+docker run -p 3000:3000 --env-file .env creative-teams-bot
 ```
+
+### Servidor VPS
 
 ```bash
-# Build e run
-docker build -t ai-content-bot .
-docker run -d --env-file .env -p 3000:3000 ai-content-bot
+# Com PM2
+npm install -g pm2
+pm2 start dist/index.js --name "teams-bot"
+pm2 save
+pm2 startup
 ```
 
-### Railway
+## 🛠️ **Desenvolvimento**
+
+### Scripts Disponíveis
 
 ```bash
-# Deploy direto do GitHub
-railway login
-railway link
-railway up
+npm run dev          # Desenvolvimento com hot reload
+npm run build        # Build para produção
+npm run start        # Executar versão de produção
+npm run lint         # Verificar código
+npm test             # Executar testes
+npm run send-test    # Testar envio manual
 ```
 
-## 🧰 Scripts Úteis
+### Estrutura do Projeto
 
-### package.json - Scripts Adicionais
-
-```json
-{
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit",
-    "db:migrate": "node scripts/migrate.js",
-    "db:seed": "node scripts/seed.js"
-  }
-}
+```
+src/
+├── content-generator/    # Geração de conteúdo IA
+├── scheduler/           # Agendamento e execução
+├── senders/            # Envio para Teams
+├── storage/            # Persistência no Supabase
+├── types/              # Definições TypeScript
+└── utils/              # Utilitários e logger
 ```
 
-### Script de Migração (scripts/migrate.js)
+## 🔧 **Troubleshooting**
 
-```javascript
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-require('dotenv').config();
+### Problemas Comuns
 
-async function runMigration() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-
-  const sql = fs.readFileSync('./database-schema.sql', 'utf8');
-  console.log('🔄 Executando migração...');
-
-  // Note: Para execução real, use a service key do Supabase
-  console.log('Execute manualmente no dashboard do Supabase:');
-  console.log(sql);
-}
-
-runMigration();
-```
-
-## 🎨 Personalização
-
-### Adicionando Novos Estilos
-
-1. Edite `src/types/index.ts`:
-
-```typescript
-export enum MessageStyle {
-  HUMOR = 'humor',
-  CURIOSITY = 'curiosity',
-  TIP = 'tip',
-  REFLECTION = 'reflection',
-  NEWS = 'news', // Novo estilo
-  TUTORIAL = 'tutorial', // Novo estilo
-}
-```
-
-2. Atualize o gerador em `AIContentGenerator.ts`:
-
-```typescript
-const styleInstructions = {
-  // ... estilos existentes
-  [MessageStyle.NEWS]: 'Compartilhe notícias relevantes sobre legal tech.',
-  [MessageStyle.TUTORIAL]: 'Crie tutoriais rápidos sobre compliance ou desenvolvimento.',
-};
-```
-
-3. Atualize o schema do banco:
-
-```sql
-ALTER TABLE public.messages
-DROP CONSTRAINT messages_style_check;
-
-ALTER TABLE public.messages
-ADD CONSTRAINT messages_style_check
-CHECK (style IN ('humor', 'curiosity', 'tip', 'reflection', 'news', 'tutorial'));
-```
-
-### Configurando Múltiplos Canais
-
-```typescript
-// src/senders/MultiChannelSender.ts
-export class MultiChannelSender {
-  private teamsSender: TeamsSender;
-  private slackSender: SlackSender; // Implementar se necessário
-
-  async sendToAllChannels(content: string): Promise<boolean> {
-    const results = await Promise.allSettled([
-      this.teamsSender.sendMessage(content),
-      // this.slackSender.sendMessage(content)
-    ]);
-
-    return results.some(result => result.status === 'fulfilled' && result.value === true);
-  }
-}
-```
-
-## 🔍 Debugging
-
-### Logs Detalhados
-
-Para debugging, configure:
+**Bot não envia mensagens:**
 
 ```bash
-NODE_ENV=development
+# Verificar logs
+npm run dev
+
+# Testar conexões
+curl -X POST http://localhost:3000/test-connection
 ```
 
-### Teste Individual de Componentes
-
-```typescript
-// scripts/test-components.ts
-import { AIContentGenerator } from '../src/content-generator/AIContentGenerator';
-import { SupabaseStorage } from '../src/storage/SupabaseStorage';
-
-async function testComponents() {
-  // Teste geração de conteúdo
-  const generator = new AIContentGenerator();
-  const message = await generator.generateRandomMessage();
-  console.log('Mensagem gerada:', message);
-
-  // Teste storage
-  const storage = new SupabaseStorage();
-  await storage.initialize();
-  const stats = await storage.getMessageStats();
-  console.log('Stats:', stats);
-}
-```
-
-### Troubleshooting Comum
-
-#### Erro: "Credenciais do Supabase não encontradas"
+**Erro de banco de dados:**
 
 ```bash
-# Verifique se as variáveis estão corretas
+# Verificar variáveis Supabase
 echo $NEXT_PUBLIC_SUPABASE_URL
-echo $NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# Testar query manual no Supabase
 ```
 
-#### Erro: "Falha no teste de conexão com Teams"
+**Mensagens repetitivas:**
 
-1. Verifique se o Power Automate Flow está ativo
-2. Teste manualmente a URL do webhook
-3. Verifique se não há firewall bloqueando
+- Sistema anti-duplicação está ativo
+- Verifique logs para detecção de similaridade
+- Ajuste `SIMILARITY_THRESHOLD` se necessário
 
-#### Erro: "OpenAI API rate limit"
+### Logs Úteis
 
-```typescript
-// Adicione delay entre tentativas
-private async delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+```bash
+# Verificar próxima execução
+curl http://localhost:3000/status
+
+# Ver estatísticas
+curl http://localhost:3000/analytics
+
+# Mensagens recentes
+curl http://localhost:3000/messages/recent
 ```
 
-## 📊 Monitoramento Avançado
+## 📈 **Monitoramento**
 
-### Métricas Customizadas
+### Métricas Importantes
 
-```typescript
-// src/utils/Metrics.ts
-export class MetricsCollector {
-  static async collectMetrics() {
-    return {
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      cpu: process.cpuUsage(),
-      timestamp: new Date().toISOString(),
-    };
-  }
-}
-```
+- Taxa de mensagens enviadas com sucesso
+- Diversidade de conteúdo (estilos/tópicos)
+- Detecção de duplicatas
+- Tempo de resposta da IA
 
-### Health Check Avançado
+### Dashboard
 
-```typescript
-// Adicionar ao index.ts
-app.get('/health/detailed', async (req, res) => {
-  const health = {
-    status: 'OK',
-    components: {
-      database: await testSupabaseConnection(),
-      teams: await testTeamsConnection(),
-      openai: await testOpenAIConnection(),
-      scheduler: BotScheduler.isRunning(),
-    },
-    metrics: await MetricsCollector.collectMetrics(),
-  };
+Acesse `http://localhost:3000/analytics` para ver:
 
-  const allHealthy = Object.values(health.components).every(Boolean);
-  res.status(allHealthy ? 200 : 503).json(health);
-});
-```
+- Estatísticas de uso
+- Distribuição por dia da semana
+- Efetividade das mensagens
+- Insights para melhorias
 
-## 🔐 Segurança
-
-### Variáveis Sensíveis
-
-- Nunca commite arquivos `.env`
-- Use secrets do seu provedor de cloud
-- Rotacione APIs keys regularmente
-
-### Rate Limiting
-
-```typescript
-// src/middleware/RateLimit.ts
-import rateLimit from 'express-rate-limit';
-
-export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por janela
-  message: 'Muitas tentativas, tente novamente em 15 minutos',
-});
-```
-
-### CORS
-
-```typescript
-// Para APIs públicas, configure CORS adequadamente
-import cors from 'cors';
-
-app.use(
-  cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
-    credentials: true,
-  })
-);
-```
-
-## 🚀 Roadmap
-
-### Próximas Features
-
-- [ ] Interface web para gerenciamento
-- [ ] Múltiplos canais (Slack, Discord, etc.)
-- [ ] Templates de mensagem customizáveis
-- [ ] Analytics avançados
-- [ ] Integração com calendário para contexto
-- [ ] A/B testing de estilos de mensagem
-- [ ] API para webhooks externos
-- [ ] Dashboard de monitoramento
-
-### Melhorias Técnicas
-
-- [ ] Cache Redis para performance
-- [ ] Queue system para processos assíncronos
-- [ ] Testes unitários e de integração
-- [ ] CI/CD pipeline
-- [ ] Containerização completa
-- [ ] Monitoramento com Prometheus
-- [ ] Alertas via PagerDuty/Slack
-
-## 🤝 Contribuindo
+## 🤝 **Contribuindo**
 
 1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
+3. Commit suas mudanças: `git commit -m 'feat: nova funcionalidade'`
+4. Push para a branch: `git push origin feature/nova-funcionalidade`
 5. Abra um Pull Request
 
-## 📄 Licença
+## 📄 **Licença**
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-## 🙋‍♂️ Suporte
+## 🆘 **Suporte**
 
-- 📧 Email: seuemail@exemplo.com
-- 💬 Issues: [GitHub Issues](link-para-issues)
-- 📚 Wiki: [Documentação Completa](link-para-wiki)
+- **Issues**: Abra uma issue no GitHub
+- **Documentação**: Veja a wiki do projeto
+- **Contato**: [seu-email@exemplo.com]
+
+## 📚 **Recursos Adicionais**
+
+- [Documentação OpenAI](https://platform.openai.com/docs)
+- [Documentação Supabase](https://supabase.com/docs)
+- [Power Automate](https://docs.microsoft.com/power-automate/)
+- [Node-cron](https://www.npmjs.com/package/node-cron)
 
 ---
 
-**Feito com ❤️ para a comunidade jurídico-tech brasileira**
+## 🎉 **Exemplos de Mensagens**
+
+### Segunda-feira
+
+> 💻 Bom dia, galera tech! Por que os programadores preferem modo escuro? Porque a luz atrai bugs! 🐛
+
+### Terça-feira
+
+> 🔍 Você sabia que Git foi criado em apenas 10 dias? Linus Torvalds literalmente inventou o controle de versão mais usado do mundo num fim de semana! 🤯
+
+### Quarta-feira
+
+> 💡 Dica rápida: Dark mode + café vai economizar 2 horas do seu debugging diário! ⚡
+
+### Quinta-feira
+
+> 🤔 E se CSS finalmente fizesse sentido? Como isso mudaria o universo da programação? 🔮
+
+### Sexta-feira
+
+> 🎉 Deploy na sexta? Só se você gosta de adrenalina no fim de semana! 😱
+
+---
+
+**Desenvolvido com ❤️ para manter as equipes tech motivadas!** 🚀
