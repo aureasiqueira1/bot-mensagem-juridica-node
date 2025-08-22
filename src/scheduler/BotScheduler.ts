@@ -6,6 +6,7 @@ import { logger } from '../utils/Logger';
 
 /**
  * Orquestrador principal que gerencia o agendamento e execução do bot
+ * Agora configurado para enviar apenas em dias úteis (segunda a sexta)
  */
 export class BotScheduler {
   private static instance: BotScheduler;
@@ -74,12 +75,6 @@ export class BotScheduler {
       // Inicializa os componentes
       await this.storage.initialize();
 
-      // Testa conexão com Teams
-      const teamsOk = await this.teamsSender.testConnection();
-      if (!teamsOk) {
-        logger.warn('⚠️ Falha no teste de conexão com Teams, mas continuando...');
-      }
-
       // Configura o agendamento
       this.setupScheduler();
 
@@ -91,7 +86,7 @@ export class BotScheduler {
   }
 
   /**
-   * Configura o agendamento usando cron
+   * Configura o agendamento usando cron - APENAS dias úteis (segunda a sexta)
    */
   private setupScheduler(): void {
     const [hour, minute] = this.sendTime.split(':').map(Number);
@@ -107,9 +102,12 @@ export class BotScheduler {
       throw new Error(`Horário inválido: ${this.sendTime}. Use formato HH:MM`);
     }
 
-    const cronExpression = `${minute} ${hour} * * *`; // Todos os dias no horário especificado
+    // Cron para dias úteis: segunda(1) a sexta(5)
+    const cronExpression = `${minute} ${hour} * * 1-5`;
 
-    logger.info(`⏰ Configurando agendamento para ${this.sendTime} (cron: ${cronExpression})`);
+    logger.info(
+      `⏰ Configurando agendamento para ${this.sendTime} em dias úteis (cron: ${cronExpression})`
+    );
 
     this.scheduledTask = cron.schedule(
       cronExpression,
@@ -122,7 +120,16 @@ export class BotScheduler {
       }
     );
 
-    logger.success('Agendamento configurado com sucesso!');
+    logger.success('Agendamento configurado para dias úteis!');
+  }
+
+  /**
+   * Verifica se hoje é um dia útil
+   */
+  private isWorkday(): boolean {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
+    return dayOfWeek >= 1 && dayOfWeek <= 5; // Segunda a sexta
   }
 
   /**
@@ -134,20 +141,26 @@ export class BotScheduler {
     try {
       logger.info('🤖 Iniciando execução do bot...');
 
+      // Verifica se é dia útil (segurança adicional)
+      if (!this.isWorkday()) {
+        logger.info('📅 Não é um dia útil, pulando execução...');
+        return;
+      }
+
       // 1. Busca mensagens recentes para contexto
-      const recentMessages = await this.storage.getRecentMessages(10);
+      const recentMessages = await this.storage.getRecentMessages(15);
       const previousContents = recentMessages.map(msg => msg.content);
 
-      // 2. Gera nova mensagem
+      // 2. Gera nova mensagem criativa
       let attempts = 0;
       let message;
       const maxGenerationAttempts = 5;
 
       do {
         attempts++;
-        logger.info(`Tentativa ${attempts} de geração de conteúdo...`);
+        logger.info(`Tentativa ${attempts} de geração de conteúdo criativo...`);
 
-        message = await this.contentGenerator.generateRandomMessage(previousContents);
+        message = await this.contentGenerator.generateCreativeMessage(previousContents);
 
         // Verifica se não é duplicata
         const isDuplicate = await this.storage.isDuplicateContent(message.content);
@@ -177,8 +190,8 @@ export class BotScheduler {
         const duration = Date.now() - startTime;
         logger.success(`✅ Bot executado com sucesso em ${duration}ms`);
 
-        // Log da mensagem enviada (truncada para não poluir o log)
-        logger.info('Mensagem enviada:', {
+        // Log da mensagem enviada
+        logger.info('Mensagem criativa enviada:', {
           content: message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
           style: message.style,
           topic: message.topic,
@@ -189,8 +202,6 @@ export class BotScheduler {
     } catch (error) {
       const duration = Date.now() - startTime;
       logger.error(`❌ Erro na execução do bot (${duration}ms):`, error);
-
-      // Em caso de erro, você pode implementar notificações de alerta
       await this.handleBotError(error);
     }
   }
@@ -200,20 +211,24 @@ export class BotScheduler {
    */
   private async handleBotError(error: any): Promise<void> {
     try {
-      // Aqui você poderia implementar:
-      // - Envio de notificação de erro para administradores
-      // - Log em sistema de monitoramento
-      // - Retry automático em alguns casos
-
       logger.error('Sistema de tratamento de erro ativado:', {
         error: error instanceof Error ? error.message : 'Erro desconhecido',
         timestamp: new Date().toISOString(),
       });
 
-      // Exemplo: tentar enviar mensagem de fallback
+      // Exemplo: tentar enviar mensagem de fallback criativa
       if (error.message.includes('geração de conteúdo')) {
-        logger.info('Tentando mensagem de fallback...');
-        // Implementar mensagem de fallback se necessário
+        logger.info('Tentando mensagem de fallback criativa...');
+
+        const fallbackMessages = [
+          '💻 Debugging é como ser detetive, só que os suspeitos são seus próprios bugs! 🕵️‍♂️',
+          '🤖 IA está revolucionando tudo... inclusive a arte de procrastinar com mais eficiência! 😅',
+          '⚡ Deploy na sexta-feira: a adrenalina que todo dev precisa para começar bem o fim de semana! 🚀',
+        ];
+
+        const randomFallback =
+          fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+        await this.teamsSender.sendMessage(randomFallback!);
       }
     } catch (fallbackError) {
       logger.error('Erro no sistema de fallback:', fallbackError);
@@ -221,17 +236,22 @@ export class BotScheduler {
   }
 
   /**
-   * Calcula o próximo horário de execução
+   * Calcula o próximo horário de execução (apenas dias úteis)
    */
   private getNextExecution(): string {
     const now = new Date();
     const [hour, minute] = this.sendTime.split(':').map(Number);
 
-    const nextExecution = new Date();
+    let nextExecution = new Date();
     nextExecution.setHours(hour!, minute!, 0, 0);
 
-    // Se já passou da hora hoje, agenda para amanhã
+    // Se já passou da hora hoje, vai para o próximo dia
     if (nextExecution <= now) {
+      nextExecution.setDate(nextExecution.getDate() + 1);
+    }
+
+    // Pula fins de semana
+    while (nextExecution.getDay() === 0 || nextExecution.getDay() === 6) {
       nextExecution.setDate(nextExecution.getDate() + 1);
     }
 
@@ -265,6 +285,7 @@ export class BotScheduler {
     messageStats: any;
     isRunning: boolean;
     uptime: string;
+    workdaysOnly: boolean;
   }> {
     const messageStats = await this.storage.getMessageStats();
 
@@ -273,6 +294,7 @@ export class BotScheduler {
       messageStats,
       isRunning: this.scheduledTask !== null,
       uptime: process.uptime().toFixed(0) + ' segundos',
+      workdaysOnly: true,
     };
   }
 }

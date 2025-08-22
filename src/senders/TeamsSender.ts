@@ -3,12 +3,12 @@ import { TeamsMessage } from '../types';
 import { logger } from '../utils/Logger';
 
 /**
- * Classe responsável por enviar mensagens para o Microsoft Teams via Power Automate
+ * Classe responsável por enviar mensagens criativas para o Microsoft Teams
  */
 export class TeamsSender {
   private readonly webhookUrl: string;
   private readonly maxRetries = 3;
-  private readonly retryDelay = 2000; // 2 segundos
+  private readonly retryDelay = 2000;
 
   constructor() {
     const url = process.env.POWER_AUTOMATE_URL;
@@ -21,7 +21,7 @@ export class TeamsSender {
   }
 
   /**
-   * Envia uma mensagem para o Microsoft Teams
+   * Envia uma mensagem criativa para o Microsoft Teams
    */
   async sendMessage(content: string): Promise<boolean> {
     let attempt = 0;
@@ -29,19 +29,19 @@ export class TeamsSender {
     while (attempt < this.maxRetries) {
       try {
         attempt++;
-        logger.info(`📤 Enviando mensagem para Teams (tentativa ${attempt})...`);
+        logger.info(`📤 Enviando mensagem criativa para Teams (tentativa ${attempt})...`);
 
-        const message = this.formatMessage(content);
+        const message = this.formatCreativeMessage(content);
 
         const response: AxiosResponse = await axios.post(this.webhookUrl, message, {
           headers: {
             'Content-Type': 'application/json',
           },
-          timeout: 10000, // 10 segundos de timeout
+          timeout: 10000,
         });
 
         if (response.status >= 200 && response.status < 300) {
-          logger.success('Mensagem enviada para Teams com sucesso!');
+          logger.success('Mensagem criativa enviada para Teams com sucesso!');
           return true;
         }
 
@@ -57,7 +57,6 @@ export class TeamsSender {
           throw new Error(`Falha ao enviar mensagem após ${this.maxRetries} tentativas`);
         }
 
-        // Aguarda antes da próxima tentativa
         await this.delay(this.retryDelay * attempt);
       }
     }
@@ -66,158 +65,129 @@ export class TeamsSender {
   }
 
   /**
-   * Formata a mensagem para o formato esperado pelo Power Automate/Teams
+   * Formata a mensagem para máximo impacto visual no Teams
    */
-  private formatMessage(content: string): TeamsMessage {
+  private formatCreativeMessage(content: string): TeamsMessage {
+    const dayOfWeek = new Date().getDay();
+
     return {
-      text: this.addEmojisAndFormatting(content),
-      title: this.generateTitle(),
-      summary: 'Mensagem diária do Bot Jurídico-Tech',
-      themeColor: this.getRandomThemeColor(),
+      text: this.enhanceMessageWithFormatting(content),
+      title: this.generateDynamicTitle(),
+      summary: this.generateDynamicSummary(dayOfWeek),
+      themeColor: this.getContextualThemeColor(),
     };
   }
 
   /**
-   * Adiciona emojis e formatação para deixar a mensagem mais atrativa
+   * Melhora a mensagem com formatação e elementos visuais
    */
-  private addEmojisAndFormatting(content: string): string {
-    // Identifica o tipo de conteúdo e adiciona emoji apropriado
-    let emoji = '🤖';
+  private enhanceMessageWithFormatting(content: string): string {
+    const emoji = this.selectContextualEmoji(content);
+    const timeGreeting = this.getTimeBasedGreeting();
 
-    if (this.isLegalContent(content)) emoji = '⚖️';
-    else if (this.isTechContent(content)) emoji = '💻';
-    else if (this.isHumorous(content)) emoji = '😄';
-    else if (this.isTip(content)) emoji = '💡';
-    else if (this.isReflective(content)) emoji = '🤔';
-
-    // Adiciona quebras de linha e formatação
-    const formattedContent = content
-      .replace(/\. ([A-Z])/g, '.\n\n$1') // Quebra linha após frases
-      .replace(/([?!])\s*([A-Z])/g, '$1\n\n$2'); // Quebra linha após perguntas/exclamações
-
-    return `${emoji} Dica Diária Jurídico-Tech\n\n${formattedContent}\n\n---\n*Bot Jurídico-Tech • ${this.getCurrentTime()}*`;
+    return `${emoji} ${timeGreeting}\n\n**${content}**\n\n---\n`;
   }
 
   /**
-   * Gera um título dinâmico baseado na hora
+   * Seleciona emoji baseado no conteúdo da mensagem
    */
-  private generateTitle(): string {
+  private selectContextualEmoji(content: string): string {
+    const contentLower = content.toLowerCase();
+
+    // Emojis específicos baseados no conteúdo
+    if (this.containsWords(contentLower, ['bug', 'erro', 'debug'])) return '🐛';
+    if (this.containsWords(contentLower, ['deploy', 'produção', 'release'])) return '🚀';
+    if (this.containsWords(contentLower, ['código', 'programar', 'dev'])) return '👩‍💻';
+    if (this.containsWords(contentLower, ['café', 'coffee'])) return '☕';
+    if (this.containsWords(contentLower, ['javascript', 'js', 'react'])) return '⚡';
+    if (this.containsWords(contentLower, ['python'])) return '🐍';
+    if (this.containsWords(contentLower, ['git', 'commit'])) return '📝';
+    if (this.containsWords(contentLower, ['api', 'backend'])) return '🔌';
+    if (this.containsWords(contentLower, ['frontend', 'ui', 'design'])) return '🎨';
+    if (this.containsWords(contentLower, ['dados', 'database', 'sql'])) return '📊';
+    if (this.containsWords(contentLower, ['lei', 'lgpd', 'compliance'])) return '⚖️';
+    if (this.containsWords(contentLower, ['agile', 'scrum', 'sprint'])) return '🏃‍♂️';
+
+    // Emojis baseados no tom
+    if (this.containsWords(contentLower, ['haha', 'kkk', 'risos', 'piada'])) return '😂';
+    if (this.containsWords(contentLower, ['dica', 'tip', 'sugestão'])) return '💡';
+    if (this.containsWords(contentLower, ['curioso', 'sabia', 'fato'])) return '🤓';
+    if (this.containsWords(contentLower, ['futuro', 'evolução', 'mudança'])) return '🔮';
+
+    // Emoji padrão baseado no dia
+    const dayEmojis = ['🤖', '💻', '⚡', '🎯', '🔥'];
+    const dayOfWeek = new Date().getDay();
+    return dayEmojis[dayOfWeek % dayEmojis.length]!;
+  }
+
+  /**
+   * Verifica se o conteúdo contém determinadas palavras
+   */
+  private containsWords(content: string, words: string[]): boolean {
+    return words.some(word => content.includes(word));
+  }
+
+  /**
+   * Gera saudação baseada no horário
+   */
+  private getTimeBasedGreeting(): string {
     const hour = new Date().getHours();
-    const titles = [
-      'Insights Jurídico-Tech',
-      'Direito Digital Diário',
-      'Compliance & Código',
-      'Inovação Jurídica',
-      'Tech Law Brasil',
-    ];
 
-    if (hour < 12) return `🌅 Bom dia! ${titles[Math.floor(Math.random() * titles.length)]}`;
-    if (hour < 18) return `☀️ Boa tarde! ${titles[Math.floor(Math.random() * titles.length)]}`;
-    return `🌙 Boa noite! ${titles[Math.floor(Math.random() * titles.length)]}`;
+    if (hour < 10) return 'Bom dia, galera tech!';
+    if (hour < 12) return 'Bom dia, devs!';
+    if (hour < 14) return 'Boa tarde!';
+    if (hour < 18) return 'Boa tarde, pessoal!';
+    return 'Boa noite!';
   }
 
   /**
-   * Retorna uma cor aleatória para o tema da mensagem
+   * Gera título dinâmico baseado no contexto
    */
-  private getRandomThemeColor(): string {
-    const colors = [
-      '#0078d4', // Azul Microsoft
-      '#107c10', // Verde
-      '#d13438', // Vermelho
-      '#ff8c00', // Laranja
-      '#5c2d91', // Roxo
-      '#00bcf2', // Azul claro
-    ];
+  private generateDynamicTitle(): string {
+    const dayOfWeek = new Date().getDay();
 
-    return colors[Math.floor(Math.random() * colors.length)]!;
+    const dayTitles = {
+      1: ['💪 Segunda Power', '🌟 Segunda', '⚡ Energia de Segunda'],
+      2: ['🚀 Terça Turbo', '💻 Terça Produtiva', '🔥 Terça Tech'],
+      3: ['🎯 Quarta Criativa', '⚡ Meio da Semana', '💡 Quarta Mágica'],
+      4: ['🔥 Quinta Inovação', '🚀 Quinta Inspiradora', '💻 Quinta Quase Sexta'],
+      5: ['🎉 Sexta Criativa', '🍕 Sexta Divertida', '🎊 Rumo ao Fim de Semana'],
+    };
+
+    const titles = dayTitles[dayOfWeek as keyof typeof dayTitles] || ['💻 Tech Daily'];
+    return titles[Math.floor(Math.random() * titles.length)]!;
   }
 
   /**
-   * Detecta se o conteúdo é relacionado ao direito
+   * Gera resumo dinâmico baseado no dia
    */
-  private isLegalContent(content: string): boolean {
-    const legalKeywords = [
-      'lei',
-      'direito',
-      'jurídico',
-      'advogado',
-      'tribunal',
-      'lgpd',
-      'compliance',
-      'contrato',
-      'legal',
-      'regulamentação',
-      'norma',
-    ];
+  private generateDynamicSummary(dayOfWeek: number): string {
+    const summaries = {
+      1: 'Começando a semana com energia tech!',
+      2: 'Terça de produtividade e código!',
+      3: 'Meio da semana, máximo de criatividade!',
+      4: 'Quinta de inovação e descobertas!',
+      5: 'Sexta de conquistas e celebração!',
+    };
 
-    return legalKeywords.some(keyword => content.toLowerCase().includes(keyword));
+    return summaries[dayOfWeek as keyof typeof summaries] || 'Daily dose de inspiração tech!';
   }
 
   /**
-   * Detecta se o conteúdo é relacionado à tecnologia
+   * Cor do tema baseada no contexto
    */
-  private isTechContent(content: string): boolean {
-    const techKeywords = [
-      'código',
-      'software',
-      'desenvolvedor',
-      'programação',
-      'api',
-      'sistema',
-      'digital',
-      'tecnologia',
-      'dados',
-      'algoritmo',
-    ];
+  private getContextualThemeColor(): string {
+    const dayOfWeek = new Date().getDay();
 
-    return techKeywords.some(keyword => content.toLowerCase().includes(keyword));
-  }
+    const dayColors = {
+      1: '#FF6B35', // Laranja energético para segunda
+      2: '#0078d4', // Azul produtivo para terça
+      3: '#107c10', // Verde criativo para quarta
+      4: '#5c2d91', // Roxo inovador para quinta
+      5: '#d13438', // Vermelho celebrativo para sexta
+    };
 
-  /**
-   * Detecta se o conteúdo é humorístico
-   */
-  private isHumorous(content: string): boolean {
-    const humorIndicators = ['😄', '😂', 'haha', 'kkkk', '!', 'piada'];
-    return humorIndicators.some(indicator =>
-      content.toLowerCase().includes(indicator.toLowerCase())
-    );
-  }
-
-  /**
-   * Detecta se o conteúdo é uma dica
-   */
-  private isTip(content: string): boolean {
-    const tipKeywords = [
-      'dica',
-      'tip',
-      'sugestão',
-      'recomendação',
-      'evite',
-      'faça',
-      'lembre-se',
-      'importante',
-      'cuidado',
-    ];
-
-    return tipKeywords.some(keyword => content.toLowerCase().includes(keyword));
-  }
-
-  /**
-   * Detecta se o conteúdo é reflexivo
-   */
-  private isReflective(content: string): boolean {
-    const reflectiveKeywords = [
-      'reflexão',
-      'pense',
-      'considere',
-      'imagine',
-      'futuro',
-      'evolução',
-      'transformação',
-      'impacto',
-    ];
-
-    return reflectiveKeywords.some(keyword => content.toLowerCase().includes(keyword));
+    return dayColors[dayOfWeek as keyof typeof dayColors] || '#0078d4';
   }
 
   /**
@@ -239,17 +209,17 @@ export class TeamsSender {
   }
 
   /**
-   * Testa a conectividade com o Teams
+   * Testa a conectividade com mensagem criativa
    */
   async testConnection(): Promise<boolean> {
     try {
       logger.info('🧪 Testando conexão com Teams...');
 
       const testMessage: TeamsMessage = {
-        text: '🧪 Teste de Conexão\n\nEste é um teste automatizado do Bot Jurídico-Tech.',
-        title: 'Teste de Conexão',
-        summary: 'Teste de conectividade',
-        themeColor: '#ffa500',
+        text: '🧪 **Teste de Conexão**\n\nO bot criativo está pronto para animar os dias úteis da equipe! 🎉',
+        title: '🤖 Sistema Online',
+        summary: 'Bot de conteúdo criativo ativo',
+        themeColor: '#00bcf2',
       };
 
       const response = await axios.post(this.webhookUrl, testMessage, {

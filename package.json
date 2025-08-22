@@ -1,24 +1,34 @@
 {
-  "name": "ai-content-bot",
-  "version": "1.0.0",
-  "description": "API Node.js com TypeScript para geração e envio automático de conteúdo criativo",
+  "name": "creative-teams-bot",
+  "version": "2.0.0",
+  "description": "Bot criativo para envio automático de conteúdo divertido e engajante para Microsoft Teams em dias úteis",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "lint": "eslint src/**/*.ts",
-    "test": "jest"
+    "lint": "eslint src/**/*.ts --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "send-test": "curl -X POST http://localhost:3000/send-message",
+    "check-health": "curl http://localhost:3000/health",
+    "docker:build": "docker build -t creative-teams-bot .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env creative-teams-bot"
   },
   "keywords": [
-    "nodejs",
+    "teams-bot",
+    "creative-content",
+    "automated-messaging",
+    "humor",
+    "workplace-engagement",
     "typescript",
     "supabase",
+    "openai",
     "microsoft-teams",
-    "ai",
-    "automation"
+    "daily-automation"
   ],
-  "author": "Your Name",
+  "author": "Your Team",
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -30,13 +40,27 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.8",
     "@types/node": "^20.10.0",
     "@types/node-cron": "^3.0.11",
     "@typescript-eslint/eslint-plugin": "^6.13.1",
     "@typescript-eslint/parser": "^6.13.1",
     "eslint": "^8.54.0",
     "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.2"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourteam/creative-teams-bot"
+  },
+  "bugs": {
+    "url": "https://github.com/yourteam/creative-teams-bot/issues"
+  },
+  "homepage": "https://github.com/yourteam/creative-teams-bot#readme"
 }
