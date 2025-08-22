@@ -54,34 +54,47 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Endpoint principal que lida com os dois tipos de chamada
-    if (pathname === '/send-message' && (method === 'POST' || method === 'GET')) {
-      logger.info(`📤 Solicitação de envio recebida via ${method}${method === 'GET' ? ' (possivelmente de cron job)' : ''}`);
-      await BotScheduler.executeManually();
-      return res.json({
-        success: true,
-        message: 'Mensagem criativa enviada com sucesso!',
-        timestamp: new Date().toISOString(),
-      });
-    }
-    
-    // Endpoint específico para o cron job da Vercel (para garantir compatibilidade)
-    if ((pathname === '/send-message' || pathname === '/cron-trigger') && method === 'GET') {
-      logger.info('📤 Cron job da Vercel recebido');
-      console.log('[VERCEL CRON] Cron job recebido em ' + new Date().toISOString());
+    // Handler unificado para todos os endpoints de envio de mensagem (manual e cron job)
+    if (
+      (pathname === '/send-message' && (method === 'POST' || method === 'GET')) || 
+      (pathname === '/cron-trigger' && method === 'GET')
+    ) {
+      // Identificar a origem da requisição para debug
+      const isCronRequest = pathname === '/cron-trigger';
+      const reqSource = isCronRequest ? 'cron job Vercel' : `chamada ${method}`;
+      
+      // Log detalhado com todas as informações possíveis para debug
+      console.log(`[VERCEL REQUEST] Recebido em: ${new Date().toISOString()}`);
+      console.log(`[VERCEL REQUEST] Tipo: ${reqSource}`);
+      console.log(`[VERCEL REQUEST] URL completa: ${req.url}`);
+      console.log(`[VERCEL REQUEST] Método: ${method}`);
+      console.log(`[VERCEL REQUEST] Pathname: ${pathname}`);
+      console.log(`[VERCEL REQUEST] Headers:`, req.headers);
+      
+      logger.info(`📤 Solicitação de envio recebida via ${reqSource}`);
+      
       try {
+        // Execução com timeout para garantir que não seja cancelada prematuramente
+        console.log('[VERCEL EXECUTION] Iniciando execução do bot...');
+        
         await BotScheduler.executeManually();
-        console.log('[VERCEL CRON] Execução bem-sucedida');
+        
+        console.log('[VERCEL EXECUTION] Bot executado com sucesso');
+        
         return res.json({
-          success: true, 
-          message: 'Mensagem disparada via cron job da Vercel',
+          success: true,
+          message: `Mensagem criativa enviada com sucesso via ${reqSource}!`,
           timestamp: new Date().toISOString(),
+          source: reqSource,
         });
       } catch (error) {
-        console.error('[VERCEL CRON] Erro:', error);
+        console.error(`[VERCEL ERROR] Erro na execução via ${reqSource}:`, error);
+        logger.error(`Erro ao processar solicitação via ${reqSource}:`, error);
+        
         return res.status(500).json({
-          error: 'Erro ao processar cron job',
-          details: error.message
+          error: `Erro ao processar solicitação via ${reqSource}`,
+          details: error.message,
+          timestamp: new Date().toISOString()
         });
       }
     }

@@ -24,6 +24,9 @@
       "dest": "/api/index.js"
     }
   ],
+  "env": {
+    "VERCEL_CRON": "true"
+  },
   "crons": [
     {
       "path": "/api/cron-trigger",
