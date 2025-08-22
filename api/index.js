@@ -1,7 +1,7 @@
-import dotenv from 'dotenv';
-import { BotScheduler } from './scheduler/BotScheduler';
-import { SupabaseStorage } from './storage/SupabaseStorage';
-import { logger } from './utils/Logger';
+const dotenv = require('dotenv');
+const { BotScheduler } = require('./scheduler/BotScheduler');
+const { SupabaseStorage } = require('./storage/SupabaseStorage');
+const { logger } = require('./utils/Logger');
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -9,7 +9,7 @@ dotenv.config();
 // Storage instance
 const storage = new SupabaseStorage();
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

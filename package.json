@@ -1,7 +1,6 @@
 {
   "name": "creative-teams-bot",
   "version": "2.0.0",
-  "type": "module",
   "description": "Bot criativo para envio automático de conteúdo divertido e engajante para Microsoft Teams em dias úteis",
   "scripts": {
     "dev": "tsx watch api/index.ts",
