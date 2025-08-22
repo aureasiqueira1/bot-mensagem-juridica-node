@@ -3,7 +3,7 @@ export default async function handler(req, res) {
 
   // Verificar se é dia útil
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=domingo, 1=segunda, etc
+  const dayOfWeek = now.getDay();
 
   if (dayOfWeek === 0 || dayOfWeek === 6) {
     return res.status(200).json({
@@ -14,33 +14,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Importar suas funções (ajuste os caminhos conforme sua estrutura)
-    const { generateContent } = await import('../src/content-generator/index.js');
-    const { sendToTeams } = await import('../src/senders/teams-sender.js');
-    const { saveMessage } = await import('../src/storage/supabase.js');
-
-    console.log('📝 Gerando conteúdo...');
-    const content = await generateContent();
-
-    console.log('💾 Salvando no banco...');
-    const savedMessage = await saveMessage(content);
-
-    console.log('📤 Enviando para Teams...');
-    const result = await sendToTeams(content);
-
-    console.log('✅ Mensagem enviada com sucesso!');
-
+    // Teste simples primeiro
     return res.status(200).json({
       success: true,
-      message: 'Mensagem enviada com sucesso',
-      content: content.text,
+      message: 'Cron job funcionando!',
       timestamp: now.toISOString(),
-      messageId: savedMessage?.id,
-      teamsResult: result,
+      dayOfWeek,
     });
   } catch (error) {
     console.error('❌ Erro no agendamento:', error);
-
     return res.status(500).json({
       success: false,
       error: error.message,
