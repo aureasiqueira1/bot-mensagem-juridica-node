@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/api/cron-trigger",
-      "dest": "/api/cron-trigger.js"
+      "dest": "/api/simple-cron.js"
     },
     {
       "src": "/api/test-cron",
