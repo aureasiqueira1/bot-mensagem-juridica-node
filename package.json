@@ -14,7 +14,8 @@
     "send-test": "curl -X POST http://localhost:3000/send-message",
     "check-health": "curl http://localhost:3000/health",
     "docker:build": "docker build -t creative-teams-bot .",
-    "docker:run": "docker run -p 3000:3000 --env-file .env creative-teams-bot"
+    "docker:run": "docker run -p 3000:3000 --env-file .env creative-teams-bot",
+    "vercel-build": "npm run build"
   },
   "keywords": [
     "teams-bot",
