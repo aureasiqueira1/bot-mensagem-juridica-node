@@ -191,17 +191,6 @@ export class TeamsSender {
   }
 
   /**
-   * Retorna a hora atual formatada
-   */
-  private getCurrentTime(): string {
-    return new Date().toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'America/Sao_Paulo',
-    });
-  }
-
-  /**
    * Utilitário para aguardar
    */
   private delay(ms: number): Promise<void> {

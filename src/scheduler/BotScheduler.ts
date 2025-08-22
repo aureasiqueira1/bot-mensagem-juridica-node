@@ -146,12 +146,7 @@ export class BotScheduler {
         logger.info('📅 Não é um dia útil, pulando execução...');
         return;
       }
-
-      // 1. Busca mensagens recentes para contexto
-      const recentMessages = await this.storage.getRecentMessages(15);
-      const previousContents = recentMessages.map(msg => msg.content);
-
-      // 2. Gera nova mensagem criativa
+      // 1. Gera nova mensagem criativa
       let attempts = 0;
       let message;
       const maxGenerationAttempts = 5;
@@ -160,7 +155,7 @@ export class BotScheduler {
         attempts++;
         logger.info(`Tentativa ${attempts} de geração de conteúdo criativo...`);
 
-        message = await this.contentGenerator.generateCreativeMessage(previousContents);
+        message = await this.contentGenerator.generateCreativeMessage();
 
         // Verifica se não é duplicata
         const isDuplicate = await this.storage.isDuplicateContent(message.content);
@@ -177,14 +172,14 @@ export class BotScheduler {
         throw new Error('Não foi possível gerar conteúdo único após múltiplas tentativas');
       }
 
-      // 3. Salva a mensagem
+      // 2. Salva a mensagem
       const savedMessage = await this.storage.saveMessage(message);
 
-      // 4. Envia para Teams
+      // 3. Envia para Teams
       const sendSuccess = await this.teamsSender.sendMessage(message.content);
 
       if (sendSuccess) {
-        // 5. Marca como enviada
+        // 4. Marca como enviada
         await this.storage.markMessageAsSent(savedMessage.id);
 
         const duration = Date.now() - startTime;

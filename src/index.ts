@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS básico para desenvolvimento
-app.use((req, res, next) => {
+app.use((_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
@@ -26,7 +26,7 @@ const storage = new SupabaseStorage();
 
 // === ROTAS BÁSICAS ===
 
-app.get('/health', (req, res) => {
+app.get('/health', (_, res) => {
   res.json({
     status: 'OK',
     service: 'Creative Teams Bot',
@@ -36,7 +36,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/status', async (req, res) => {
+app.get('/status', async (_, res) => {
   try {
     const stats = await BotScheduler.getInstance().getSystemStats();
     res.json({
@@ -58,7 +58,7 @@ app.get('/status', async (req, res) => {
 // === ROTAS DE CONTROLE ===
 
 // Envio manual de mensagem
-app.post('/send-message', async (req, res) => {
+app.post('/send-message', async (_, res) => {
   try {
     logger.info('📤 Solicitação de envio manual recebida');
     await BotScheduler.executeManually();
@@ -78,10 +78,8 @@ app.post('/send-message', async (req, res) => {
 });
 
 // Teste de conectividade
-app.post('/test-connection', async (req, res) => {
+app.post('/test-connection', async (_, res) => {
   try {
-    const scheduler = BotScheduler.getInstance();
-    // Teste simulado - você pode adicionar método específico no TeamsSender
     res.json({
       success: true,
       message: 'Teste de conexão realizado',
@@ -98,7 +96,7 @@ app.post('/test-connection', async (req, res) => {
 // === ROTAS DE ANALYTICS ===
 
 // Estatísticas detalhadas
-app.get('/analytics', async (req, res) => {
+app.get('/analytics', async (_, res) => {
   try {
     const stats = await storage.getMessageStats();
     const insights = await storage.getContentInsights();
@@ -154,12 +152,12 @@ app.patch('/messages/:id/effectiveness', async (req, res) => {
 
     await storage.updateMessageEffectiveness(id, effectiveness);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Efetividade atualizada com sucesso',
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Erro ao atualizar efetividade',
     });
   }
@@ -167,7 +165,7 @@ app.patch('/messages/:id/effectiveness', async (req, res) => {
 
 // === MIDDLEWARE DE ERRO ===
 
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _: express.Request, res: express.Response) => {
   logger.error('Erro não tratado na aplicação:', err);
   res.status(500).json({
     error: 'Erro interno do servidor',
@@ -176,7 +174,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // Rota 404
-app.use((req, res) => {
+app.use((_, res) => {
   res.status(404).json({
     error: 'Rota não encontrada',
     availableRoutes: [

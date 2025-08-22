@@ -22,26 +22,24 @@ export class AIContentGenerator {
   /**
    * Gera uma mensagem criativa focada em humor e engajamento
    */
-  async generateCreativeMessage(previousMessages?: string[]): Promise<Message> {
+  async generateCreativeMessage(): Promise<Message> {
     // Escolhe estilo e tópico de forma inteligente para manter variedade
-    const { style, topic } = this.selectOptimalStyleAndTopic(previousMessages);
+    const { style, topic } = this.selectOptimalStyleAndTopic();
 
     return this.generateMessage({
       style,
       topic,
-      previousMessages,
     });
   }
 
   /**
    * Seleciona o melhor estilo e tópico baseado no histórico
    */
-  private selectOptimalStyleAndTopic(previousMessages?: string[]): {
+  private selectOptimalStyleAndTopic(): {
     style: MessageStyle;
     topic: MessageTopic;
   } {
     const dayOfWeek = new Date().getDay();
-    const hour = new Date().getHours();
 
     // Segunda-feira: energia positiva
     if (dayOfWeek === 1) {
@@ -390,8 +388,8 @@ Responda APENAS com o conteúdo da mensagem:`;
   /**
    * Gera uma mensagem com estilo e tópico aleatórios (método antigo mantido para compatibilidade)
    */
-  async generateRandomMessage(previousMessages?: string[]): Promise<Message> {
-    return this.generateCreativeMessage(previousMessages);
+  async generateRandomMessage(): Promise<Message> {
+    return this.generateCreativeMessage();
   }
 
   /**
