@@ -67,7 +67,7 @@ app.post('/send-message', async (_, res) => {
       message: 'Mensagem criativa enviada com sucesso!',
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Erro ao enviar mensagem manual:', error);
     res.status(500).json({
       success: false,
