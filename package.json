@@ -2,10 +2,10 @@
   "name": "creative-teams-bot",
   "version": "2.0.0",
   "description": "Bot criativo para envio automático de conteúdo divertido e engajante para Microsoft Teams em dias úteis",
-  "main": "dist/index.js",
+  "main": "src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node src/index.ts",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "lint": "eslint src/**/*.ts --fix",
     "test": "jest",
