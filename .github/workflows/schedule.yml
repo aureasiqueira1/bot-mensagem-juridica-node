@@ -1,0 +1,15 @@
+name: Scheduled Message
+on:
+  schedule:
+    - cron: '25 18 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  send-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send message to Teams
+        run: |
+          curl -X POST https://bot-mensagem-juridica-node-beige.vercel.app/send-message \
+               -H "Content-Type: application/json" \
+               --fail-with-body
