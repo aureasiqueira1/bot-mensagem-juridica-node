@@ -9,6 +9,19 @@ dotenv.config();
 // Storage instance
 const storage = new SupabaseStorage();
 
+// Timeout padrão para operações assíncronas (30 segundos)
+const EXECUTION_TIMEOUT = 30000;
+
+// Helper para garantir que promessas completem dentro do timeout
+async function executeWithTimeout(promise, timeoutMs = EXECUTION_TIMEOUT) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error(`Operação excedeu o timeout de ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+}
+
 module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -77,7 +90,8 @@ module.exports = async function handler(req, res) {
         // Execução com timeout para garantir que não seja cancelada prematuramente
         console.log('[VERCEL EXECUTION] Iniciando execução do bot...');
         
-        await BotScheduler.executeManually();
+        // Usar o helper de timeout para garantir execução completa
+        await executeWithTimeout(BotScheduler.executeManually());
         
         console.log('[VERCEL EXECUTION] Bot executado com sucesso');
         
