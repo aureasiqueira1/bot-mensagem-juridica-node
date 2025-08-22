@@ -1,11 +1,12 @@
 {
   "name": "creative-teams-bot",
   "version": "2.0.0",
-  "description": "Bot criativo para envio automático de conteúdo divertido e engajante para Microsoft Teams em dias úteis",
   "type": "module",
+  "description": "Bot criativo para envio automático de conteúdo divertido e engajante para Microsoft Teams em dias úteis",
   "scripts": {
-    "build": "echo 'No build needed'",
-    "start": "node src/index.ts",
+    "build": "tsc",
+    "vercel-build": "tsc",
+    "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "lint": "eslint src/**/*.ts --fix",
     "test": "jest",
@@ -57,10 +58,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourteam/creative-teams-bot"
+    "url": "https://github.com/aureasiqueira1/bot-mensagem-juridica-node"
   },
   "bugs": {
-    "url": "https://github.com/yourteam/creative-teams-bot/issues"
+    "url": "https://github.com/aureasiqueira1/bot-mensagem-juridica-node/issues"
   },
-  "homepage": "https://github.com/yourteam/creative-teams-bot#readme"
+  "homepage": "https://github.com/aureasiqueira1/bot-mensagem-juridica-node#readme"
 }
