@@ -8,13 +8,17 @@
   ],
   "routes": [
     {
+      "src": "/send-message",
+      "dest": "/api/index.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/api/index.js"
     }
   ],
   "crons": [
     {
-      "path": "/api/send-message",
+      "path": "/send-message",
       "schedule": "13 21 * * *"
     }
   ]
