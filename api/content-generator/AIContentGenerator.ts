@@ -94,7 +94,7 @@ export class AIContentGenerator {
           topic: prompt.topic,
         });
 
-        const systemPrompt = this.buildCreativeSystemPrompt(prompt);
+        const systemPrompt = await this.buildCreativeSystemPrompt(prompt);
         const userPrompt = this.buildCreativeUserPrompt(prompt);
 
         const completion = await this.openai.chat.completions.create({
@@ -103,12 +103,14 @@ export class AIContentGenerator {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
-          max_tokens: 200, // Reduzido para mensagens mais concisas
-          temperature: 0.9, // Mais criatividade
-          presence_penalty: 0.8, // Evita repetições
-          frequency_penalty: 0.5,
-          top_p: 0.95, // Adiciona variedade
+          max_tokens: 200,
+          temperature: 1.0, // Máxima criatividade
+          presence_penalty: 1.2, // Forte penalidade para repetições
+          frequency_penalty: 0.8, // Evita palavras repetidas
+          top_p: 0.9, // Diversidade na seleção
         });
+
+        const fallbackMessages = this.getFallbackMessages();
 
         const content = completion.choices[0]?.message?.content?.trim();
 
@@ -148,7 +150,7 @@ export class AIContentGenerator {
   /**
    * Constrói o prompt do sistema focado em criatividade e humor
    */
-  private buildCreativeSystemPrompt(prompt: ContentGenerationPrompt): string {
+  private async buildCreativeSystemPrompt(prompt: ContentGenerationPrompt): Promise<string> {
     const basePrompt = `Você é um especialista em criar conteúdo SUPER CRIATIVO e bem-humorado para uma equipe de tecnologia.
 
 🎯 OBJETIVO: Criar mensagens que façam a equipe SORRIR e se ENGAJAR todos os dias úteis.
@@ -159,6 +161,8 @@ export class AIContentGenerator {
 - Máximo 200 caracteres
 - Português brasileiro, informal e divertido
 - NUNCA repita ideias anteriores
+- Use saudação correta: "Bom dia!" de manhã (até 12h), "Boa tarde!" à tarde (12h-18h)
+- PROIBIDO usar "Boa tarde" de manhã ou "Bom dia" à tarde
 
 👥 PÚBLICO: Desenvolvedores, PMs, designers, e pessoal de tech em geral
 🎨 TOM: Descontraído, inteligente, com humor refinado (não forçado)`;
@@ -221,30 +225,100 @@ ESTILO: REFLEXÕES COM HUMOR
       [MessageTopic.MIXED]: 'Combine temas livremente - seja criativo e surpreendente!',
     };
 
+    const avoidanceContext = await this.buildAvoidanceContext();
+    
     return `${basePrompt}
 
 ${enhancedStyleInstructions[prompt.style]}
 
 🎯 TÓPICO: ${topicInstructions[prompt.topic]}
 
-${this.buildAvoidanceContext(prompt.previousMessages)}
+${avoidanceContext}
 
 🚀 IMPORTANTE: Sua missão é fazer a equipe começar o dia com um sorriso!`;
   }
 
   /**
-   * Constrói contexto de mensagens para evitar repetições
+   * Constrói contexto de mensagens para evitar repetições (melhorado)
    */
-  private buildAvoidanceContext(previousMessages?: string[]): string {
-    if (!previousMessages || previousMessages.length === 0) {
-      return '';
-    }
+  private async buildAvoidanceContext(): Promise<string> {
+    try {
+      const storage = new (await import('../storage/SupabaseStorage')).SupabaseStorage();
+      const recentMessages = await storage.getRecentMessages(20);
+      
+      if (recentMessages.length === 0) {
+        return '';
+      }
 
-    return `🚫 EVITE REPETIR: Não reuse essas ideias das últimas mensagens:
-${previousMessages
-  .slice(0, 8)
-  .map((msg, index) => `${index + 1}. ${msg.substring(0, 80)}...`)
-  .join('\n')}`;
+      // Extrai temas/conceitos principais das mensagens recentes
+      const themes = this.extractThemes(recentMessages.map(m => m.content));
+      
+      return `🚫 EVITE REPETIR estes temas/conceitos já usados recentemente:
+${themes.slice(0, 10).map((theme: string, i: number) => `${i + 1}. ${theme}`).join('\n')}
+
+📝 Últimas mensagens (para referência):
+${recentMessages.slice(0, 5).map((msg, i: number) => `${i + 1}. "${msg.content.substring(0, 60)}..."`).join('\n')}`;
+    } catch (error) {
+      return '🚫 SEJA CRIATIVO: Evite repetir temas comuns como bugs históricos, mariposas, etc.';
+    }
+  }
+
+  /**
+   * Extrai temas principais das mensagens para evitar repetições
+   */
+  private extractThemes(messages: string[]): string[] {
+    const commonThemes = new Set<string>();
+    
+    messages.forEach(message => {
+      const lowerMsg = message.toLowerCase();
+      
+      // Detecta temas específicos
+      if (lowerMsg.includes('bug') || lowerMsg.includes('mariposa')) {
+        commonThemes.add('bugs históricos/mariposas');
+      }
+      if (lowerMsg.includes('javascript') || lowerMsg.includes('js')) {
+        commonThemes.add('JavaScript');
+      }
+      if (lowerMsg.includes('deploy') || lowerMsg.includes('sexta')) {
+        commonThemes.add('deploy de sexta-feira');
+      }
+      if (lowerMsg.includes('git') || lowerMsg.includes('commit')) {
+        commonThemes.add('Git/commits');
+      }
+      if (lowerMsg.includes('css') || lowerMsg.includes('frontend')) {
+        commonThemes.add('CSS/Frontend');
+      }
+      if (lowerMsg.includes('api') || lowerMsg.includes('backend')) {
+        commonThemes.add('APIs/Backend');
+      }
+      if (lowerMsg.includes('ia') || lowerMsg.includes('machine learning')) {
+        commonThemes.add('IA/Machine Learning');
+      }
+      if (lowerMsg.includes('scrum') || lowerMsg.includes('agile')) {
+        commonThemes.add('Metodologias ágeis');
+      }
+      if (lowerMsg.includes('docker') || lowerMsg.includes('kubernetes')) {
+        commonThemes.add('Containerização');
+      }
+      if (lowerMsg.includes('lgpd') || lowerMsg.includes('compliance')) {
+        commonThemes.add('LGPD/Compliance');
+      }
+    });
+    
+    return Array.from(commonThemes);
+  }
+
+  /**
+   * Retorna a saudação correta baseada no horário de Brasília
+   */
+  private getCorrectGreeting(): string {
+    const now = new Date();
+    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const hour = brasiliaTime.getHours();
+
+    if (hour < 12) return 'Bom dia!';
+    if (hour < 18) return 'Boa tarde!';
+    return 'Boa noite!';
   }
 
   /**
@@ -264,6 +338,7 @@ ${previousMessages
 ✅ Curta (1-2 frases, máx 200 chars)
 ✅ Que faça a equipe sorrir
 ✅ Com referências que devs vão entender
+✅ Com saudação apropriada para o horário (${this.getCorrectGreeting()})
 
 ${this.getStyleSpecificInstructions(prompt.style)}
 
@@ -303,13 +378,15 @@ Responda APENAS com o conteúdo da mensagem:`;
   }
 
   /**
-   * Obtém contexto temporal
+   * Obtém contexto temporal baseado no horário de Brasília
    */
   private getTimeContext(): string {
+    // Força horário de Brasília (UTC-3)
     const now = new Date();
-    const hour = now.getHours();
+    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const hour = brasiliaTime.getHours();
 
-    if (hour < 10) return ' de manhã';
+    if (hour < 12) return ' de manhã';
     if (hour < 14) return ' no almoço';
     if (hour < 18) return ' da tarde';
     return ' do fim do expediente';
@@ -431,20 +508,24 @@ Responda APENAS com o conteúdo da mensagem:`;
   }
 
   /**
-   * Obtém banco de mensagens de emergência para fallback
+   * Obtém banco de mensagens de emergência para fallback (diversificadas)
    */
   getFallbackMessages(): string[] {
+    const greeting = this.getCorrectGreeting();
+    
     return [
-      '💻 Por que os programadores preferem modo escuro? Porque a luz atrai bugs! 🐛',
-      '🤖 Machine Learning é como adolescente: tem potencial infinito, mas ninguém entende direito o que tá acontecendo! 😅',
-      "⚡ Git commit -m 'funciona na minha máquina' - a frase mais honesta da programação! 🚀",
-      "🔍 Debugging é 90% confusão e 10% 'COMO ISSO FUNCIONOU?!' 🤯",
-      "📱 Apps hoje: 50MB para mostrar 'Hello World'. Nos anos 90: sistema operacional inteiro em 1 disquete! 💾",
-      "🎯 A diferença entre junior e senior? Junior googla 'como fazer X'. Senior googla 'por que X não funciona'. 🔍",
-      '⚖️ LGPD: quando você percebe que até o cookie do navegador precisa de advogado! 🍪',
-      '🚀 Deploy na sexta? Só se você gosta de adrenalina no fim de semana! 😱',
-      '🧠 IA está ficando tão inteligente que logo vai entender nosso código melhor que nós! 🤖',
-      '⏰ Estimativa de tempo em desenvolvimento: multiplique por π e reze! 🙏',
+      `${greeting} 💻 CSS: a única linguagem onde 'center' não significa centralizar! 😅`,
+      `${greeting} 🎯 Programador feliz: quando o código compila na primeira tentativa! ✨`,
+      `${greeting} 🔄 Refatorar código antigo é como reformar casa: sempre demora 3x mais! 🏠`,
+      `${greeting} 📊 Estatística: 73% dos devs inventam estatísticas na hora! 📈`,
+      `${greeting} 🎨 UX Designer: 'Pode mover isso 2px pra esquerda?' Dev: *suspiro profundo* 😤`,
+      `${greeting} 🚀 Kubernetes: transformando 1 problema em 47 problemas distribuídos! ☁️`,
+      `${greeting} 💡 Pair programming: duas pessoas, um teclado, infinitas discussões! 👥`,
+      `${greeting} 🔐 Senha forte: 123456Strong! Hackear? Impossível! 🛡️`,
+      `${greeting} 📱 App mobile: 'Funciona no meu iPhone 6!' - Dev em 2024 📞`,
+      `${greeting} ⚡ Microserviços: porque 1 monolito era pouco caos! 🏗️`,
+      `${greeting} 🎭 Staging vs Produção: irmãos gêmeos que nunca se parecem! 🔄`,
+      `${greeting} 🧪 Testes unitários: 100% cobertura, 0% confiança! 🎯`,
     ];
   }
 }
