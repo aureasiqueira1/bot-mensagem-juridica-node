@@ -83,9 +83,8 @@ export class TeamsSender {
    */
   private enhanceMessageWithFormatting(content: string): string {
     const emoji = this.selectContextualEmoji(content);
-    const timeGreeting = this.getTimeBasedGreeting();
 
-    return `${emoji} ${timeGreeting}\n\n**${content}**\n\n---\n`;
+    return `${emoji} Bom dia!\n\n**${content}**\n\n---\n`;
   }
 
   /**
@@ -128,20 +127,7 @@ export class TeamsSender {
   }
 
   /**
-   * Gera saudação baseada no horário
-   */
-  private getTimeBasedGreeting(): string {
-    const hour = new Date().getHours();
-
-    if (hour < 10) return 'Bom dia, galera tech!';
-    if (hour < 12) return 'Bom dia, devs!';
-    if (hour < 14) return 'Boa tarde!';
-    if (hour < 18) return 'Boa tarde, pessoal!';
-    return 'Boa noite!';
-  }
-
-  /**
-   * Gera título dinâmico baseado no contexto
+   * Gera título dinâmico baseado no dia da semana
    */
   private generateDynamicTitle(): string {
     const dayOfWeek = new Date().getDay();

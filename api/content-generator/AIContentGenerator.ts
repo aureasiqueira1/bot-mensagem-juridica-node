@@ -161,8 +161,6 @@ export class AIContentGenerator {
 - Máximo 200 caracteres
 - Português brasileiro, informal e divertido
 - NUNCA repita ideias anteriores
-- Use saudação correta: "Bom dia!" de manhã (até 12h), "Boa tarde!" à tarde (12h-18h)
-- PROIBIDO usar "Boa tarde" de manhã ou "Bom dia" à tarde
 
 👥 PÚBLICO: Desenvolvedores, PMs, designers, e pessoal de tech em geral
 🎨 TOM: Descontraído, inteligente, com humor refinado (não forçado)`;
@@ -226,7 +224,7 @@ ESTILO: REFLEXÕES COM HUMOR
     };
 
     const avoidanceContext = await this.buildAvoidanceContext();
-    
+
     return `${basePrompt}
 
 ${enhancedStyleInstructions[prompt.style]}
@@ -245,19 +243,25 @@ ${avoidanceContext}
     try {
       const storage = new (await import('../storage/SupabaseStorage')).SupabaseStorage();
       const recentMessages = await storage.getRecentMessages(20);
-      
+
       if (recentMessages.length === 0) {
         return '';
       }
 
       // Extrai temas/conceitos principais das mensagens recentes
       const themes = this.extractThemes(recentMessages.map(m => m.content));
-      
+
       return `🚫 EVITE REPETIR estes temas/conceitos já usados recentemente:
-${themes.slice(0, 10).map((theme: string, i: number) => `${i + 1}. ${theme}`).join('\n')}
+${themes
+  .slice(0, 10)
+  .map((theme: string, i: number) => `${i + 1}. ${theme}`)
+  .join('\n')}
 
 📝 Últimas mensagens (para referência):
-${recentMessages.slice(0, 5).map((msg, i: number) => `${i + 1}. "${msg.content.substring(0, 60)}..."`).join('\n')}`;
+${recentMessages
+  .slice(0, 5)
+  .map((msg, i: number) => `${i + 1}. "${msg.content.substring(0, 60)}..."`)
+  .join('\n')}`;
     } catch (error) {
       return '🚫 SEJA CRIATIVO: Evite repetir temas comuns como bugs históricos, mariposas, etc.';
     }
@@ -268,10 +272,10 @@ ${recentMessages.slice(0, 5).map((msg, i: number) => `${i + 1}. "${msg.content.s
    */
   private extractThemes(messages: string[]): string[] {
     const commonThemes = new Set<string>();
-    
+
     messages.forEach(message => {
       const lowerMsg = message.toLowerCase();
-      
+
       // Detecta temas específicos
       if (lowerMsg.includes('bug') || lowerMsg.includes('mariposa')) {
         commonThemes.add('bugs históricos/mariposas');
@@ -304,21 +308,8 @@ ${recentMessages.slice(0, 5).map((msg, i: number) => `${i + 1}. "${msg.content.s
         commonThemes.add('LGPD/Compliance');
       }
     });
-    
+
     return Array.from(commonThemes);
-  }
-
-  /**
-   * Retorna a saudação correta baseada no horário de Brasília
-   */
-  private getCorrectGreeting(): string {
-    const now = new Date();
-    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-    const hour = brasiliaTime.getHours();
-
-    if (hour < 12) return 'Bom dia!';
-    if (hour < 18) return 'Boa tarde!';
-    return 'Boa noite!';
   }
 
   /**
@@ -338,7 +329,6 @@ ${recentMessages.slice(0, 5).map((msg, i: number) => `${i + 1}. "${msg.content.s
 ✅ Curta (1-2 frases, máx 200 chars)
 ✅ Que faça a equipe sorrir
 ✅ Com referências que devs vão entender
-✅ Com saudação apropriada para o horário (${this.getCorrectGreeting()})
 
 ${this.getStyleSpecificInstructions(prompt.style)}
 
@@ -383,7 +373,7 @@ Responda APENAS com o conteúdo da mensagem:`;
   private getTimeContext(): string {
     // Força horário de Brasília (UTC-3)
     const now = new Date();
-    const brasiliaTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+    const brasiliaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     const hour = brasiliaTime.getHours();
 
     if (hour < 12) return ' de manhã';
@@ -511,21 +501,19 @@ Responda APENAS com o conteúdo da mensagem:`;
    * Obtém banco de mensagens de emergência para fallback (diversificadas)
    */
   getFallbackMessages(): string[] {
-    const greeting = this.getCorrectGreeting();
-    
     return [
-      `${greeting} 💻 CSS: a única linguagem onde 'center' não significa centralizar! 😅`,
-      `${greeting} 🎯 Programador feliz: quando o código compila na primeira tentativa! ✨`,
-      `${greeting} 🔄 Refatorar código antigo é como reformar casa: sempre demora 3x mais! 🏠`,
-      `${greeting} 📊 Estatística: 73% dos devs inventam estatísticas na hora! 📈`,
-      `${greeting} 🎨 UX Designer: 'Pode mover isso 2px pra esquerda?' Dev: *suspiro profundo* 😤`,
-      `${greeting} 🚀 Kubernetes: transformando 1 problema em 47 problemas distribuídos! ☁️`,
-      `${greeting} 💡 Pair programming: duas pessoas, um teclado, infinitas discussões! 👥`,
-      `${greeting} 🔐 Senha forte: 123456Strong! Hackear? Impossível! 🛡️`,
-      `${greeting} 📱 App mobile: 'Funciona no meu iPhone 6!' - Dev em 2024 📞`,
-      `${greeting} ⚡ Microserviços: porque 1 monolito era pouco caos! 🏗️`,
-      `${greeting} 🎭 Staging vs Produção: irmãos gêmeos que nunca se parecem! 🔄`,
-      `${greeting} 🧪 Testes unitários: 100% cobertura, 0% confiança! 🎯`,
+      `💻 CSS: a única linguagem onde 'center' não significa centralizar! 😅`,
+      `🎯 Programador feliz: quando o código compila na primeira tentativa! ✨`,
+      `🔄 Refatorar código antigo é como reformar casa: sempre demora 3x mais! 🏠`,
+      `📊 Estatística: 73% dos devs inventam estatísticas na hora! 📈`,
+      `🎨 UX Designer: 'Pode mover isso 2px pra esquerda?' Dev: *suspiro profundo* 😤`,
+      `🚀 Kubernetes: transformando 1 problema em 47 problemas distribuídos! ☁️`,
+      `💡 Pair programming: duas pessoas, um teclado, infinitas discussões! 👥`,
+      `🔐 Senha forte: 123456Strong! Hackear? Impossível! 🛡️`,
+      `📱 App mobile: 'Funciona no meu iPhone 6!' - Dev em 2024 📞`,
+      `⚡ Microserviços: porque 1 monolito era pouco caos! 🏗️`,
+      `🎭 Staging vs Produção: irmãos gêmeos que nunca se parecem! 🔄`,
+      `🧪 Testes unitários: 100% cobertura, 0% confiança! 🎯`,
     ];
   }
 }
